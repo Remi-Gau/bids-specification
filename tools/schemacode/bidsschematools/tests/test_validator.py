@@ -155,44 +155,45 @@ def test_load_all():
 def test_write_report(tmp_path):
     from bidsschematools.validator import write_report
 
-    validation_result = {}
+    validation_result = {
+        "schema_tracking": [
+            {
+                "regex": ".*?/sub-(?P<subject>[0-9a-zA-Z]+)/"
+                "(|ses-(?P<session>[0-9a-zA-Z]+)/)anat/sub-(?P=subject)"
+                "(|_ses-(?P=session))(|_acq-(?P<acquisition>[0-9a-zA-Z]+))"
+                "(|_ce-(?P<ceagent>[0-9a-zA-Z]+))"
+                "(|_rec-(?P<reconstruction>[0-9a-zA-Z]+))"
+                "(|_run-(?P<run>[0-9a-zA-Z]+))"
+                "(|_part-(?P<part>(mag|phase|real|imag)))"
+                "_(T1w|T2w|PDw|T2starw|FLAIR|inplaneT1|inplaneT2|PDT2|angio|T2star)"
+                "\\.(nii.gz|nii|json)$",
+                "mandatory": False,
+            }
+        ],
+        "schema_listing": [
+            {
+                "regex": ".*?/sub-(?P<subject>[0-9a-zA-Z]+)/"
+                "(|ses-(?P<session>[0-9a-zA-Z]+)/)anat/sub-(?P=subject)"
+                "(|_ses-(?P=session))(|_acq-(?P<acquisition>[0-9a-zA-Z]+))"
+                "(|_ce-(?P<ceagent>[0-9a-zA-Z]+))"
+                "(|_rec-(?P<reconstruction>[0-9a-zA-Z]+))"
+                "(|_run-(?P<run>[0-9a-zA-Z]+))"
+                "(|_part-(?P<part>(mag|phase|real|imag)))"
+                "_(T1w|T2w|PDw|T2starw|FLAIR|inplaneT1|inplaneT2|PDT2|angio|T2star)"
+                "\\.(nii.gz|nii|json)$",
+                "mandatory": False,
+            }
+        ],
+        "path_tracking": [
+            "/home/chymera/.data2/datalad/000026/"
+            "rawdata/sub-EXC022/anat/sub-EXC022_ses-MRI_flip-1_VFA.nii.gz"
+        ],
+        "path_listing": [
+            "/home/chymera/.data2/datalad/000026/"
+            "rawdata/sub-EXC022/anat/sub-EXC022_ses-MRI_flip-1_VFA.nii.gz"
+        ],
+    }
 
-    validation_result["schema_tracking"] = [
-        {
-            "regex": ".*?/sub-(?P<subject>[0-9a-zA-Z]+)/"
-            "(|ses-(?P<session>[0-9a-zA-Z]+)/)anat/sub-(?P=subject)"
-            "(|_ses-(?P=session))(|_acq-(?P<acquisition>[0-9a-zA-Z]+))"
-            "(|_ce-(?P<ceagent>[0-9a-zA-Z]+))"
-            "(|_rec-(?P<reconstruction>[0-9a-zA-Z]+))"
-            "(|_run-(?P<run>[0-9a-zA-Z]+))"
-            "(|_part-(?P<part>(mag|phase|real|imag)))"
-            "_(T1w|T2w|PDw|T2starw|FLAIR|inplaneT1|inplaneT2|PDT2|angio|T2star)"
-            "\\.(nii.gz|nii|json)$",
-            "mandatory": False,
-        }
-    ]
-    validation_result["schema_listing"] = [
-        {
-            "regex": ".*?/sub-(?P<subject>[0-9a-zA-Z]+)/"
-            "(|ses-(?P<session>[0-9a-zA-Z]+)/)anat/sub-(?P=subject)"
-            "(|_ses-(?P=session))(|_acq-(?P<acquisition>[0-9a-zA-Z]+))"
-            "(|_ce-(?P<ceagent>[0-9a-zA-Z]+))"
-            "(|_rec-(?P<reconstruction>[0-9a-zA-Z]+))"
-            "(|_run-(?P<run>[0-9a-zA-Z]+))"
-            "(|_part-(?P<part>(mag|phase|real|imag)))"
-            "_(T1w|T2w|PDw|T2starw|FLAIR|inplaneT1|inplaneT2|PDT2|angio|T2star)"
-            "\\.(nii.gz|nii|json)$",
-            "mandatory": False,
-        }
-    ]
-    validation_result["path_tracking"] = [
-        "/home/chymera/.data2/datalad/000026/"
-        "rawdata/sub-EXC022/anat/sub-EXC022_ses-MRI_flip-1_VFA.nii.gz"
-    ]
-    validation_result["path_listing"] = [
-        "/home/chymera/.data2/datalad/000026/"
-        "rawdata/sub-EXC022/anat/sub-EXC022_ses-MRI_flip-1_VFA.nii.gz"
-    ]
 
     report_path = os.path.join(
         tmp_path,

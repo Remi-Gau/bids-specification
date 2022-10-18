@@ -37,14 +37,10 @@ def get_files_from_pr(pr_num):
     Returns:
         {list} -- List of modified filenames
     """
-    files = []
     pr_url = f"https://api.github.com/repos/bids-standard/bids-specification/pulls/{pr_num}/files"
     resp = requests.get(pr_url)
 
-    for item in resp.json():
-        files.append(item["filename"])
-
-    return files
+    return [item["filename"] for item in resp.json()]
 
 
 def filter_files(pr_num, start_phrase="src"):
@@ -61,13 +57,7 @@ def filter_files(pr_num, start_phrase="src"):
         {list} -- List of filenames that begin with the desired start phrase
     """
     files = get_files_from_pr(pr_num)
-    filtered_files = []
-
-    for filename in files:
-        if filename.startswith(start_phrase):
-            filtered_files.append(filename)
-
-    return filtered_files
+    return [filename for filename in files if filename.startswith(start_phrase)]
 
 
 if __name__ == "__main__":

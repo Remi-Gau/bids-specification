@@ -64,8 +64,7 @@ def make_entity_definitions(schema, src_path=None):
 def _make_entity_definition(entity, entity_info):
     """Describe an entity."""
     entity_shorthand = entity_info["name"]
-    text = ""
-    text += "## {}".format(entity_shorthand)
+    text = f"## {entity_shorthand}"
     text += "\n\n"
     text += f"**Full name**: {entity_info['display_name']}"
     text += "\n\n"
@@ -118,8 +117,8 @@ def make_glossary(schema, src_path=None):
         sense_keys = {mso: [] for mso in multi_sense_objects}
 
         for key in group_obj_keys:
-            for sense_key in sense_keys.keys():
-                if (key == sense_key) or (key.startswith(sense_key + "__")):
+            for sense_key in sense_keys:
+                if key == sense_key or key.startswith(f"{sense_key}__"):
                     sense_keys[sense_key].append(key)
 
         sense_names = {}
@@ -131,9 +130,11 @@ def make_glossary(schema, src_path=None):
         for key in group_obj_keys:
             new_name = sense_names.get(key, key)
             new_name = f"{new_name} ({group})"
-            all_objects[new_name] = {}
-            all_objects[new_name]["key"] = f"objects.{group}.{key}"
-            all_objects[new_name]["type"] = TYPE_CONVERTER.get(group, group)
+            all_objects[new_name] = {
+                "key": f"objects.{group}.{key}",
+                "type": TYPE_CONVERTER.get(group, group),
+            }
+
             all_objects[new_name]["definition"] = group_objects[key]
 
     text = ""
@@ -169,13 +170,19 @@ def make_glossary(schema, src_path=None):
 
         text += f"**Description**:\n{obj_desc}\n\n"
 
-        temp_obj_def = {
+        if temp_obj_def := {
             k: v
             for k, v in obj_def.items()
-            if k not in ("description", "display_name", "name", "value", "enum", "pattern")
-        }
-
-        if temp_obj_def:
+            if k
+            not in (
+                "description",
+                "display_name",
+                "name",
+                "value",
+                "enum",
+                "pattern",
+            )
+        }:
             temp_obj_def = yaml.dump(temp_obj_def)
             text += f"**Schema information**:\n```yaml\n{temp_obj_def}\n```"
 
@@ -259,11 +266,7 @@ def make_filename_template(
     if not schema:
         schema = load_schema()
 
-    if pdf_format:
-        lt, gt = "<", ">"
-    else:
-        lt, gt = "&lt;", "&gt;"
-
+    lt, gt = ("<", ">") if pdf_format else ("&lt;", "&gt;")
     schema = Namespace(filter_schema(schema.to_dict(), **kwargs))
     suffix_key_table = value_key_table(schema.objects.suffixes)
     ext_key_table = value_key_table(schema.objects.extensions)
@@ -271,16 +274,18 @@ def make_filename_template(
     # Parent directories
     sub_string = utils._link_with_html(
         _format_entity(schema.objects.entities.subject, lt, gt),
-        html_path=ENTITIES_PATH + ".html",
+        html_path=f"{ENTITIES_PATH}.html",
         heading="sub",
         pdf_format=pdf_format,
     )
+
     ses_string = utils._link_with_html(
         _format_entity(schema.objects.entities.session, lt, gt),
-        html_path=ENTITIES_PATH + ".html",
+        html_path=f"{ENTITIES_PATH}.html",
         heading="ses",
         pdf_format=pdf_format,
     )
+
     lines = [f"{sub_string}/", f"\t[{ses_string}/]"]
 
     file_rules = schema.rules.files[dstype]
@@ -292,10 +297,11 @@ def make_filename_template(
     for datatype in sorted(file_groups):
         datatype_string = utils._link_with_html(
             datatype,
-            html_path=GLOSSARY_PATH + ".html",
+            html_path=f"{GLOSSARY_PATH}.html",
             heading=f"{datatype.lower()}-datatypes",
             pdf_format=pdf_format,
         )
+
         lines.append(f"\t\t{datatype_string}/")
 
         # Unique filename patterns
@@ -341,25 +347,31 @@ def make_filename_template(
             # we use the "suffix" variable and expect a table later in the spec
             if len(group["suffixes"]) >= n_dupes_to_combine:
                 suffixes = [
-                    lt
-                    + utils._link_with_html(
-                        "suffix",
-                        html_path=GLOSSARY_PATH + ".html",
-                        heading="suffix-common_principles",
-                        pdf_format=pdf_format,
+                    (
+                        (
+                            lt
+                            + utils._link_with_html(
+                                "suffix",
+                                html_path=f"{GLOSSARY_PATH}.html",
+                                heading="suffix-common_principles",
+                                pdf_format=pdf_format,
+                            )
+                        )
+                        + gt
                     )
-                    + gt
                 ]
+
             else:
                 suffixes = [
                     utils._link_with_html(
                         suffix,
-                        html_path=GLOSSARY_PATH + ".html",
+                        html_path=f"{GLOSSARY_PATH}.html",
                         heading=f"{suffix_key_table[suffix].lower()}-suffixes",
                         pdf_format=pdf_format,
                     )
                     for suffix in group.suffixes
                 ]
+
 
             # Add extensions
             extensions = [ext if ext != "*" else ".<extension>" for ext in group.extensions]
@@ -372,21 +384,18 @@ def make_filename_template(
 
             ext_headings = []
             for extension in extensions:
-                # The glossary indexes by the extension identifier (niigz instead of .nii.gz),
-                # but the rules reference the actual suffix string (.nii.gz instead of niigz),
-                # so we need to look it up.
-                key = ext_key_table.get(extension)
-                if key:
+                if key := ext_key_table.get(extension):
                     ext_headings.append(f"{key.lower()}-extensions")
                 else:
                     ext_headings.append("extension-common_principles")
 
             extensions = utils.combine_extensions(
                 extensions,
-                html_path=GLOSSARY_PATH + ".html",
+                html_path=f"{GLOSSARY_PATH}.html",
                 heading_lst=ext_headings,
                 pdf_format=pdf_format,
             )
+
 
             lines.extend(
                 f"\t\t\t{ent_string}_{suffix}{extension}"

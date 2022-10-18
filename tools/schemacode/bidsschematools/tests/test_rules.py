@@ -67,18 +67,9 @@ def test_rule_objects(schema_obj):
                 is_list = False
 
             for i_use, use in enumerate(instance):
-                if use == "derivatives":
+                if use == "derivatives" or "[]" in use or "{}" in use:
                     # Skip derivatives dirs, because the dir is treated as a "use" instead.
                     continue
-                elif "[]" in use:
-                    # Rules may reference metadata fields with lists.
-                    # This test can't handle this yet, so skip.
-                    continue
-                elif "{}" in use:
-                    # Rules may reference sub-dictionaries in metadata fields.
-                    # This test can't handle this yet, so skip.
-                    continue
-
                 if object_type in ["extensions", "suffixes"]:
                     # Some object types are referenced via their "value" fields in the rules
                     object_values = [

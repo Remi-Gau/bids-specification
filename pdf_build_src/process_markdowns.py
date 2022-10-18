@@ -39,11 +39,11 @@ def copy_src():
     target_path = "src_copy"
 
     # make new directory
-    mkdir_cmd = "mkdir " + target_path
+    mkdir_cmd = f"mkdir {target_path}"
     run_shell_cmd(mkdir_cmd)
 
     # copy contents of src directory
-    copy_cmd = "cp -R " + src_path + " " + target_path
+    copy_cmd = f"cp -R {src_path} {target_path}"
     run_shell_cmd(copy_cmd)
 
 
@@ -58,18 +58,16 @@ def copy_images(root_path):
     Will be done from images directory of subdirectories to images directory
     in the src directory
     """
-    subdir_list = []
+    subdir_list = [
+        root
+        for root, dirs, files in sorted(os.walk(root_path))
+        if "images" in dirs
+    ]
 
-    # walk through the src directory to find subdirectories named 'images'
-    # and copy contents to the 'images' directory in the duplicate src
-    # directory
-    for root, dirs, files in sorted(os.walk(root_path)):
-        if "images" in dirs:
-            subdir_list.append(root)
 
     for each in subdir_list:
         if each != root_path:
-            run_shell_cmd("cp -R " + each + "/images" + " " + root_path + "/images/")
+            run_shell_cmd(f"cp -R {each}/images {root_path}/images/")
 
 
 def extract_header_string():
@@ -83,9 +81,9 @@ def extract_header_string():
 
     header_string = data[0].split(": ")[1]
 
-    title = " ".join(header_string.split()[0:4])
+    title = " ".join(header_string.split()[:4])
     version_number = header_string.split()[-1]
-    build_date = datetime.today().strftime("%Y-%m-%d")
+    build_date = datetime.now().strftime("%Y-%m-%d")
 
     return title, version_number, build_date
 
@@ -148,18 +146,16 @@ def remove_internal_links_reference(root_path):
 
     for root, dirs, files in sorted(os.walk(root_path)):
         for file in files:
-            links_to_remove = []
             if file.endswith(".md"):
                 with open(os.path.join(root, file), "r") as markdown:
                     data = markdown.readlines()
 
+                links_to_remove = []
                 # first find, which links need to be remove by scanning the
                 # references, and remove the reference
                 for ind, line in enumerate(data):
 
-                    match = pattern_ref.search(line)
-
-                    if match:
+                    if match := pattern_ref.search(line):
                         links_to_remove.append(match.groups()[0])
                         data[ind] = "\n"
 
@@ -174,9 +170,7 @@ def remove_internal_links_reference(root_path):
                     pattern = re.compile(r"\[([^\]]+)\]\[" + f"{link}" + r"\]")
                     for ind, line in enumerate(data):
 
-                        match = pattern.search(line)
-
-                        if match:
+                        if match := pattern.search(line):
                             line = re.sub(pattern, match.groups()[0], line)
 
                         data[ind] = line
@@ -216,9 +210,7 @@ def remove_internal_links_inline(root_path):
                     data = markdown.readlines()
 
                 for ind, line in enumerate(data):
-                    match = pattern_inline.search(line)
-
-                    if match:
+                    if match := pattern_inline.search(line):
                         line = re.sub(pattern_inline, f" {match.groups()[1]}", line)
 
                     data[ind] = line
@@ -244,7 +236,7 @@ def assert_no_multiline_links(root_path):
     """
     pattern = re.compile(r"(\s|^)+\[([^\]]+)$")
 
-    problems = dict()
+    problems = {}
     for root, dirs, files in sorted(os.walk(root_path)):
         for file in files:
             if file.endswith(".md"):
@@ -268,12 +260,10 @@ def assert_no_multiline_links(root_path):
                     if code_context or macro_context:
                         continue
 
-                    match = pattern.search(line)
-
-                    if match:
+                    if match := pattern.search(line):
                         problems[file] = problems.get(file, []) + [(ind, line)]
 
-    if len(problems) > 0:
+    if problems:
         msg = (
             "Found multiline markdown links! Please reformat as single"
             " line links.\n\n"
@@ -331,14 +321,12 @@ def correct_table(table, offset=[0.0, 0.0], debug=False):
     # nb_of_rows = len(table)
     nb_of_cols = len(table[0]) - 2
 
-    nb_of_chars = []
-    for i, row in enumerate(table):
-        # Ignore number of dashes in the count of characters
-        if i != 1:
-            nb_of_chars.append([len(elem) for elem in row])
+    nb_of_chars = [
+        [len(elem) for elem in row] for i, row in enumerate(table) if i != 1
+    ]
 
     # sanity check: nb_of_chars is list of list, all nested lists must be of equal length
-    if not len(set([len(i) for i in nb_of_chars])) == 1:
+    if len({len(i) for i in nb_of_chars}) != 1:
         print('    - ERROR for current table ... "nb_of_chars" is misaligned, see:\n')
         print(nb_of_chars)
         print("\n    - Skipping formatting of this table.")
@@ -353,35 +341,25 @@ def correct_table(table, offset=[0.0, 0.0], debug=False):
     # Computes an equal number of dashes per column based
     # on the maximal number of characters over the columns
     nb_of_dashes = max_chars
-    prop_of_dashes = 1.0 / nb_of_cols
-
     # Adjust number of characters in first and second column based  offset parameter
     first_column_width = int(offset[0] * nb_of_dashes) + nb_of_dashes
     second_column_width = int(offset[1] * nb_of_dashes) + nb_of_dashes
 
     if debug:
-        print("    - Number of chars in table cells: {}".format(max_chars_in_cols))
-        print("    - Number of dashes (per column): {}".format(nb_of_dashes))
-        print("    - Proportion of dashes (per column): {}".format(prop_of_dashes))
-        print(
-            "    - Final number of chars in first column: {}".format(first_column_width)
-        )
-        print(
-            "    - Final number of chars in second column: {}".format(
-                second_column_width
-            )
-        )
+        print(f"    - Number of chars in table cells: {max_chars_in_cols}")
+        print(f"    - Number of dashes (per column): {nb_of_dashes}")
+        prop_of_dashes = 1.0 / nb_of_cols
+
+        print(f"    - Proportion of dashes (per column): {prop_of_dashes}")
+        print(f"    - Final number of chars in first column: {first_column_width}")
+        print(f"    - Final number of chars in second column: {second_column_width}")
 
     # Format the lines with correct number of dashes or whitespaces and
     # correct alignment of fences and populate the new table (A List of str)
     new_table = []
     for i, row in enumerate(table):
 
-        if i == 1:
-            str_format = " {:-{align}{width}} "
-        else:
-            str_format = " {:{align}{width}} "
-
+        str_format = " {:-{align}{width}} " if i == 1 else " {:{align}{width}} "
         row_content = []
         for j, elem in enumerate(row):
             # Set the column width
@@ -391,34 +369,32 @@ def correct_table(table, offset=[0.0, 0.0], debug=False):
             elif j == 2:
                 column_width = second_column_width
 
-            if j == 0 or j == len(row) - 1:
+            if j in [0, len(row) - 1]:
                 row_content.append(elem)
+            elif "-:" in elem and ":-" in elem:
+                str_format = " {:-{align}{width}}: "
+                row_content.append(
+                    str_format.format(":-", align="<", width=(column_width))
+                )
+            elif "-:" not in elem and ":-" in elem:
+                str_format = " {:-{align}{width}} "
+                row_content.append(
+                    str_format.format(":-", align="<", width=(column_width))
+                )
+            elif "-:" in elem:
+                str_format = " {:-{align}{width}}: "
+                row_content.append(
+                    str_format.format("-", align="<", width=(column_width))
+                )
+            elif i == 1:
+                str_format = " {:-{align}{width}} "
+                row_content.append(
+                    str_format.format("-", align="<", width=(column_width))
+                )
             else:
-                # Handles alignment descriptors in pipe tables
-                if "-:" in elem and ":-" in elem:
-                    str_format = " {:-{align}{width}}: "
-                    row_content.append(
-                        str_format.format(":-", align="<", width=(column_width))
-                    )
-                elif "-:" not in elem and ":-" in elem:
-                    str_format = " {:-{align}{width}} "
-                    row_content.append(
-                        str_format.format(":-", align="<", width=(column_width))
-                    )
-                elif "-:" in elem and ":-" not in elem:
-                    str_format = " {:-{align}{width}}: "
-                    row_content.append(
-                        str_format.format("-", align="<", width=(column_width))
-                    )
-                elif i == 1 and "-:" not in elem and ":-" not in elem:
-                    str_format = " {:-{align}{width}} "
-                    row_content.append(
-                        str_format.format("-", align="<", width=(column_width))
-                    )
-                else:
-                    row_content.append(
-                        str_format.format(elem, align="<", width=(column_width))
-                    )
+                row_content.append(
+                    str_format.format(elem, align="<", width=(column_width))
+                )
 
         new_table.append(row_content)
 
@@ -427,20 +403,15 @@ def correct_table(table, offset=[0.0, 0.0], debug=False):
 
 def _contains_table_start(line, debug=False):
     """Check if line is start of a md table."""
-    is_table = False
-
     nb_of_pipes = line.count("|")
     nb_of_escaped_pipes = line.count(r"\|")
     nb_of_pipes = nb_of_pipes - nb_of_escaped_pipes
     nb_of_dashes = line.count("--")
 
     if debug:
-        print("Number of dashes / pipes : {} / {}".format(nb_of_dashes, nb_of_pipes))
+        print(f"Number of dashes / pipes : {nb_of_dashes} / {nb_of_pipes}")
 
-    if nb_of_pipes > 2 and nb_of_dashes > 2:
-        is_table = True
-
-    return is_table
+    return nb_of_pipes > 2 and nb_of_dashes > 2
 
 
 def correct_tables(root_path, debug=False):
@@ -471,7 +442,7 @@ def correct_tables(root_path, debug=False):
     for root, dirs, files in sorted(os.walk(root_path)):
         for file in files:
             if file.endswith(".md") and file not in exclude_files:
-                print("Check tables in {}".format(os.path.join(root, file)))
+                print(f"Check tables in {os.path.join(root, file)}")
 
                 # Load lines of the markdown file
                 with open(os.path.join(root, file), "r") as f:
@@ -484,9 +455,6 @@ def correct_tables(root_path, debug=False):
                     # Use dashes to detect where a table start and
                     # extract the header and the dashes lines
                     if not table_mode and _contains_table_start(line, debug):
-                        # Initialize a list to store table rows
-                        table = []
-
                         # Set table_mode to True such that the next lines
                         # will be append to the table list
                         table_mode = True
@@ -494,7 +462,7 @@ def correct_tables(root_path, debug=False):
                         # Keep track of the line number where the table starts
                         start_line = line_nb - 1
 
-                        print("  * Detected table starting line {}".format(start_line))
+                        print(f"  * Detected table starting line {start_line}")
                         # Extract for each row (header and the one containing dashes)
                         # the content of each column and strip to remove extra whitespace
                         header_row = [
@@ -503,10 +471,7 @@ def correct_tables(root_path, debug=False):
                         ]
                         row = [c.strip() for c in re.split(r"(?<!\\)\|", line)]
 
-                        # Add the two lines to the table row list
-                        table.append(header_row)
-                        table.append(row)
-
+                        table = [header_row, row]
                     elif table_mode:
                         # Extract from the line string the content of each column
                         # and strip them to remove extra whitespace
@@ -519,11 +484,12 @@ def correct_tables(root_path, debug=False):
                         is_end_of_table = False
                         if len(row) > 1:
                             table.append(row)
-                            if line_nb < len(content) - 1:
-                                if not len(content[line_nb]) > 1:
-                                    is_end_of_table = True
-                                    end_line = line_nb
-                            elif line_nb == len(content) - 1:
+                            if (
+                                line_nb < len(content) - 1
+                                and len(content[line_nb]) <= 1
+                                or line_nb >= len(content) - 1
+                                and line_nb == len(content) - 1
+                            ):
                                 is_end_of_table = True
                                 end_line = line_nb
                         else:
@@ -534,11 +500,7 @@ def correct_tables(root_path, debug=False):
                         # append each corrected row (line)
                         # to the content of the new markdown content
                         if is_end_of_table:
-                            print(
-                                "    - End of table detected after line {}".format(
-                                    end_line
-                                )
-                            )
+                            print(f"    - End of table detected after line {end_line}")
 
                             # Set table_mode to False such that the script will look
                             # for a new table start at the next markdown line
