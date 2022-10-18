@@ -372,7 +372,6 @@ def make_filename_template(
                     for suffix in group.suffixes
                 ]
 
-
             # Add extensions
             extensions = [ext if ext != "*" else ".<extension>" for ext in group.extensions]
             if len(extensions) >= n_dupes_to_combine:
@@ -395,7 +394,6 @@ def make_filename_template(
                 heading_lst=ext_headings,
                 pdf_format=pdf_format,
             )
-
 
             lines.extend(
                 f"\t\t\t{ent_string}_{suffix}{extension}"

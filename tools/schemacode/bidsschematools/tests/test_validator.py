@@ -194,7 +194,6 @@ def test_write_report(tmp_path):
         ],
     }
 
-
     report_path = os.path.join(
         tmp_path,
         "output_bids_validator_xs_write.log",
