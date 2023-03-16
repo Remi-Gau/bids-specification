@@ -36,7 +36,7 @@ Users should focus on [the rendered content](https://bids-specification.readthed
 The specification is provided in the form of a webpage, built using
 [MkDocs](https://www.mkdocs.org/) and [Read the Docs](https://readthedocs.org/).
 
-*Want to learn more about working with BIDS? Have a question, comment, or suggestion?*
+*Want to learn more about working   with BIDS? Have a question, comment, or suggestion?*
 
 1. Read some introductory material, most likely the very basic problems have already been addressed!
   - [BIDS Starter Kit](https://github.com/bids-standard/bids-starter-kit) for tutorials, wikis, templates, ...
