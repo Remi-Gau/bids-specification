@@ -14,7 +14,7 @@ In this repository, we develop the
 
 # When to use BIDS
 
-To organize your data in BIDS, all you need is neuro data, a computer, and the
+To organize your data in BIDS, all you need is neuro data, a computer,   and the
 [BIDS specification](https://bids-specification.readthedocs.io/en/stable/).
 
 BIDS currently supports the following data modalities with more to come in the future:
