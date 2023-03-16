@@ -48,7 +48,7 @@ The specification is provided in the form of a webpage, built using
 
 # Contributing to BIDS
 
-BIDS is a community-driven standard, and it depends on contributions from its members.
+BIDS is a community-driven standard, and  it depends on contributions from its members.
 We welcome new contributors, and we appreciate all contributions to the project!
 
 For a current list of our contributors, please see our [Contributors appendix](https://github.com/bids-standard/bids-specification/blob/master/src/appendices/contributors.md).
