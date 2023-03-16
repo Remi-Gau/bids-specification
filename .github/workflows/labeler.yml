@@ -11,7 +11,7 @@ jobs:
   labeler:
     runs-on: ubuntu-latest
 
-    if: github.repository_owner == 'bids-standard'
+    if: github.repository_owner == 'Remi-Gau'
 
     steps:
     - name: Check Labels
