@@ -95,7 +95,7 @@ jobs:
         working-directory: tools/schemacode
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: unit_${{ matrix.os }}_${{ matrix.python-version }}
           path: tools/schemacode/coverage.xml
@@ -150,7 +150,7 @@ jobs:
         working-directory: tools/schemacode
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: schema_validation
           path: tools/schemacode/coverage.xml
